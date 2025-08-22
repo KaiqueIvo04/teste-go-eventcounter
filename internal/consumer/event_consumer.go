@@ -2,14 +2,17 @@ package consumer
 
 import (
 	"context"
+
 	"github.com/reb-felipe/eventcounter/internal/counter"
+	eventcounter "github.com/reb-felipe/eventcounter/pkg"
 )
 
 type EventConsumer struct {	
 	counter *counter.EventCounter
 }
 
-func New(counter *counter.EventCounter) *EventConsumer {
+// Implementação implícita em Go da interface eventcounter.Consumer
+func New(counter *counter.EventCounter) eventcounter.Consumer {
 	return &EventConsumer{
 		counter: counter,
 	}
