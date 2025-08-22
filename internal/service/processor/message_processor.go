@@ -32,14 +32,21 @@ func New(consumer eventcounter.Consumer) *MessageProcessor {
 func (mp *MessageProcessor) Start(ctx context.Context) {
 	fmt.Println("Iniciando serviços com go routines...")
 	
-	mp.wg.Add(3)
+	mp.wg.Add(3) // Adiciona 3 espaços para go routines ao WaitGroup
 	go mp.processCreatedEvents(ctx)
 	go mp.processUpdatedEvents(ctx)
 	go mp.processDeletedEvents(ctx)
 }
 
+// Para todos os Services esperando todas as go routines finalizarem
+func (mp *MessageProcessor) Stop() {
+	fmt.Println("Aguardando finalização dos services...")
+	mp.wg.Wait()
+	fmt.Println("Todos os services foram finalizados!")
+}
+
 func (mp *MessageProcessor) ProcessMessage(msg amqp091.Delivery) error {
-	// Extrair partes da mensagem (RoutingKey, Body)
+	// ############ Extrair partes da mensagem (RoutingKey, Body) ############
 	parts := strings.Split(msg.RoutingKey, ".")
 	if len(parts) != 3 || parts[1] != "event" {
 		return fmt.Errorf("formato inválido da routing key: %s", msg.RoutingKey)
@@ -55,14 +62,14 @@ func (mp *MessageProcessor) ProcessMessage(msg amqp091.Delivery) error {
 		return fmt.Errorf("erro ao deserializar o corpo da mensagem: %w", err)
 	}
 
-	// Formar struct da mensagem
+	// ############ Formar struct da mensagem ############
 	message := eventcounter.Message{
 		UID:       body.Id,
 		EventType: eventcounter.EventType(eventType),
 		UserID:    userID,
 	}
 
-	// Rotear para o channel correto
+	// ############ Rotear para o channel correto ############
 	switch eventType {
 	case "created":
 		select {

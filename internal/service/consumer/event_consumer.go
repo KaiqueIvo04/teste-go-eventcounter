@@ -3,7 +3,7 @@ package consumer
 import (
 	"context"
 
-	"github.com/reb-felipe/eventcounter/internal/counter"
+	"github.com/reb-felipe/eventcounter/internal/service/counter"
 	eventcounter "github.com/reb-felipe/eventcounter/pkg"
 )
 
