@@ -16,10 +16,10 @@ import (
 
 func main() {
 	// Carrega variáveis de ambiente
-    err := godotenv.Load()
-    if err != nil {
-        fmt.Println("Não foi possível carregar o arquivo .env")
-    }
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Não foi possível carregar o arquivo .env")
+	}
 
 	// Conectar com RabbitMq
 	connection, err := amqp091.Dial(os.Getenv("RABBITMQ_URI"))
@@ -28,10 +28,10 @@ func main() {
 	}
 	defer connection.Close()
 
-	// Abrir um canal
+	// Abrir o canal da conexão
 	channel, err := connection.Channel()
 	if err != nil {
-		fmt.Printf("Erro ao abrir canal: %s", err)
+		fmt.Printf("Erro ao abrir canal de conexão: %s", err)
 	}
 	defer channel.Close()
 
@@ -52,14 +52,14 @@ func main() {
 	eventConsumer := consumer.New(eventCounter)
 	messageProcessor := processor.New(eventConsumer)
 
-	// Declarar context para cancelamento
+	// Declarar context para cancelamento (vida útil das go routines)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	/**
 	* Definir timeout de 5 segundos e
 	* inicializar variável para marcar tempo
-	*/
+	 */
 	var lastTime time.Time
 	timeout := 5 * time.Second
 
@@ -67,13 +67,15 @@ func main() {
 	messageProcessor.Start(ctx)
 	fmt.Println("Iniciando processamento de mensagens...")
 
-
 	for {
-		select{
+		select {
 		case msg, ok := <-msgs:
 			if !ok {
 				fmt.Println("Canal de mensagens fechado (ack: false)")
-				cancel() // Cancela go routines por meio do context
+				cancel()                        // Cancela go routines por meio do context
+				messageProcessor.Stop()         // Espera todas as go routines finalizarem
+				eventCounter.SaveAndWriteFile() // Salva contagens em arquivos JSON
+				return
 			}
 
 			lastTime = time.Now()
@@ -86,25 +88,15 @@ func main() {
 			} else {
 				msg.Ack(false) // Confirmar o processamento
 			}
-		
-		case <- time.After(1 * time.Second):
-			// Verificar timeout desde a última mensagem
+
+		case <-time.After(1 * time.Second): // Checa timeout a cada 1 segundo
 			if !lastTime.IsZero() && time.Since(lastTime) > timeout {
 				fmt.Println("Timeout de 5 segundos atingido, finalizando...")
-				eventCounter.SaveAndWriteFile()
-				cancel()
+				cancel()                        // Cancela go routines por meio do context
+				messageProcessor.Stop()         // Espera todas as go routines finalizarem
+				eventCounter.SaveAndWriteFile() // Salva contagens em arquivos JSON
 				return
 			}
 		}
 	}
-	
-
-	// Parar processadores e cancelar go routines
-	// cancel()
-	// messageProcessor.Stop()
-
-	// eventCounter.PrintCounts()
-	// for msg := range msgs {
-	//  	MessageProcessor.ProcessMessage(msg)
-	// }
 }
