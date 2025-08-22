@@ -91,7 +91,7 @@ func main() {
 			// Verificar timeout desde a última mensagem
 			if !lastTime.IsZero() && time.Since(lastTime) > timeout {
 				fmt.Println("Timeout de 5 segundos atingido, finalizando...")
-				eventCounter.PrintCounts()
+				eventCounter.SaveAndWriteFile()
 				cancel()
 				return
 			}

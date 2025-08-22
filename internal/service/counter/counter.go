@@ -1,8 +1,10 @@
 package counter
 
 import (
-	"sync"
+	"encoding/json"
 	"fmt"
+	"sync"
+	"os"
 )
 
 type EventCounter struct {
@@ -39,27 +41,41 @@ func (ec *EventCounter) IncrementDeleted(userId string) {
 	ec.deleted[userId]++
 }
 
-func (ec *EventCounter) PrintCounts() {
+func (ec *EventCounter) SaveAndWriteFile() {
 	ec.mu.Lock()
 	defer ec.mu.Unlock()
 
-	// Imprime as contagens atuais
-	fmt.Println("CREATED Events:")
-	for userId, count := range ec.created {
-		if count > 0 {
-			println("User:", userId, "Created:", count)
-		}
+	// Mapear dados para os arquivos a serem escritos
+	files := map[string]map[string]int{
+		"created": ec.created,
+		"updated": ec.updated,
+		"deleted": ec.deleted,
 	}
-	fmt.Println("UPDATED Events:")
-	for userId, count := range ec.updated {
-		if count > 0 {
-			println("User:", userId, "Updated:", count)
-		}
+
+	// Criar diretório se não existir
+	err := os.MkdirAll("json", os.ModePerm)
+	if err != nil {
+		fmt.Printf("Erro ao criar diretório 'json': %s\n", err)
+		return
 	}
-	fmt.Println("DELETED Events:")
-	for userId, count := range ec.deleted {
-		if count > 0 {
-			println("User:", userId, "Deleted:", count)
+
+	// Percorrer dados e escrever em arquivos JSON
+	for eventType, userCounts := range files {
+		fileName := fmt.Sprintf("json/%s_events.json", eventType) // Forma nome do arquivo com interpolação
+		file, err := os.Create(fileName)
+		if err != nil {
+			fmt.Printf("Erro ao criar arquivo %s: %s\n", fileName, err)
 		}
+		defer file.Close()
+		
+		json := json.NewEncoder(file)
+		json.SetIndent("", "  ")	// Adiciona indentação JSON
+
+		err = json.Encode(userCounts) // Escreve os dados
+		if err != nil {
+			fmt.Printf("Erro ao escrever no arquivo %s: %s\n", fileName, err)
+		}
+		
+		fmt.Printf("Arquivo %s criado com sucesso!\n", fileName)
 	}
 }
