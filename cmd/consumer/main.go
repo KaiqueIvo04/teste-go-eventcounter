@@ -7,6 +7,11 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rabbitmq/amqp091-go"
+	"github.com/reb-felipe/eventcounter/internal"
+	"github.com/reb-felipe/eventcounter/internal/consumer"
+	"github.com/reb-felipe/eventcounter/internal/counter"
+	"github.com/reb-felipe/eventcounter/internal/processor"
+	eventcounter "github.com/reb-felipe/eventcounter/pkg"
 )
 
 func main() {
@@ -36,13 +41,18 @@ func main() {
 		log.Fatalf("Erro ao declarar fila: %s", err)
 	}
 
-	// Consumir mensagens da fila
+	// Obter mensagens da fila
 	msgs, err := channel.Consume(queue.Name, "", true, false, false, false, nil)
 	if err != nil {
 		log.Fatalf("Erro ao registrar consumidor da fila: %s", err)
 	}
 
-	for msg := range msgs {
-		fmt.Printf("Mensagem: %s\n", msg.RoutingKey)
-	}
+	// Inicializar services
+	eventCounter := counter.New()
+	eventConsumer := consumer.New(eventCounter)
+	MessageProcessor := processor.New(eventConsumer)
+
+	// for msg := range msgs {
+	// 	fmt.Printf("Mensagem: %s\n", msg.RoutingKey)
+	// }
 }
