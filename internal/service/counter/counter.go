@@ -7,41 +7,41 @@ import (
 	"os"
 )
 
-type EventCounter struct {
+type Counter struct {
 	mu sync.Mutex
 	created map[string]int
 	updated map[string]int
 	deleted map[string]int
 }
 
-func New() *EventCounter {
+func New() *Counter {
 	// Inicializa os maps para contagem de eventos dos usuários
-	return &EventCounter{
+	return &Counter{
 		created: make(map[string]int),
 		updated: make(map[string]int),
 		deleted: make(map[string]int),
 	}
 }
 
-func (ec *EventCounter) IncrementCreated(userId string) {
+func (ec *Counter) IncrementCreated(userId string) {
 	ec.mu.Lock()
 	defer ec.mu.Unlock()
 	ec.created[userId]++
 }
 
-func (ec *EventCounter) IncrementUpdated(userId string) {
+func (ec *Counter) IncrementUpdated(userId string) {
 	ec.mu.Lock()
 	defer ec.mu.Unlock()
 	ec.updated[userId]++
 }
 
-func (ec *EventCounter) IncrementDeleted(userId string) {
+func (ec *Counter) IncrementDeleted(userId string) {
 	ec.mu.Lock()
 	defer ec.mu.Unlock()
 	ec.deleted[userId]++
 }
 
-func (ec *EventCounter) SaveAndWriteFile() {
+func (ec *Counter) SaveAndWriteFile() {
 	ec.mu.Lock()
 	defer ec.mu.Unlock()
 
@@ -55,7 +55,7 @@ func (ec *EventCounter) SaveAndWriteFile() {
 	// Criar diretório se não existir
 	err := os.MkdirAll("json", os.ModePerm)
 	if err != nil {
-		fmt.Printf("Erro ao criar diretório 'json': %s\n", err)
+		fmt.Printf("ERRO AO CRIAR DIRETÓRIO JSON: %s\n", err)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (ec *EventCounter) SaveAndWriteFile() {
 		fileName := fmt.Sprintf("json/%s_events.json", eventType) // Forma nome do arquivo com interpolação
 		file, err := os.Create(fileName)
 		if err != nil {
-			fmt.Printf("Erro ao criar arquivo %s: %s\n", fileName, err)
+			fmt.Printf("ERRO AO CRIAR O ARQUIVO %s: %s\n", fileName, err)
 		}
 		defer file.Close()
 		
@@ -73,7 +73,7 @@ func (ec *EventCounter) SaveAndWriteFile() {
 
 		err = json.Encode(userCounts) // Escreve os dados
 		if err != nil {
-			fmt.Printf("Erro ao escrever no arquivo %s: %s\n", fileName, err)
+			fmt.Printf("ERRO AO ESCREVER NO ARQUIVO %s: %s\n", fileName, err)
 		}
 		
 		fmt.Printf("Arquivo %s criado com sucesso!\n", fileName)
