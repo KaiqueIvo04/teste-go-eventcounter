@@ -56,8 +56,8 @@ func (mp *MessageProcessor) ProcessMessage(msg amqp091.Delivery) error {
 	eventType := parts[2]
 
 	if eventType != string(eventcounter.EventCreated) &&
-	   eventType != string(eventcounter.EventUpdated) &&
-	   eventType != string(eventcounter.EventDeleted) {
+		eventType != string(eventcounter.EventUpdated) &&
+		eventType != string(eventcounter.EventDeleted) {
 		return fmt.Errorf("tipo de evento inválido na routing key: %s", msg.RoutingKey)
 	}
 
@@ -67,13 +67,6 @@ func (mp *MessageProcessor) ProcessMessage(msg amqp091.Delivery) error {
 	err := json.Unmarshal(msg.Body, &body)
 	if err != nil {
 		return fmt.Errorf("erro ao deserializar o corpo da mensagem: %s", msg.Body)
-	}
-
-	// ############ Checkar se mensagem já foi processada ############
-	_, exists := mp.storedMessages.LoadOrStore(body.Id, true)
-	if exists {
-		fmt.Printf("A mensagem %s já foi processada", body.Id)
-		return nil // Pular já que não precisa processar denovo
 	}
 
 	// ############ Formar struct da mensagem ############
@@ -118,9 +111,15 @@ func (mp *MessageProcessor) processCreatedEvents(ctx context.Context) {
 	for {
 		select {
 		case msg := <-mp.createdCh:
-			err := mp.consumer.Created(ctx, msg.UserID)
-			if err != nil {
-				fmt.Printf("ERRO AO PROCESSAR EVENTO CREATED: %v", err)
+			// ############ Checkar se mensagem já foi processada ############
+			_, exists := mp.storedMessages.LoadOrStore(msg.UID, true)
+			if exists {
+				fmt.Printf("A mensagem %s já foi processada", msg.UID)
+			} else {
+				err := mp.consumer.Created(ctx, msg.UserID)
+				if err != nil {
+					fmt.Printf("ERRO AO PROCESSAR EVENTO CREATED: %v", err)
+				}
 			}
 		case <-ctx.Done():
 			fmt.Println("Processor CREATED finalizando...")
@@ -136,9 +135,15 @@ func (mp *MessageProcessor) processUpdatedEvents(ctx context.Context) {
 	for {
 		select {
 		case msg := <-mp.updatedCh:
-			err := mp.consumer.Updated(ctx, msg.UserID)
-			if err != nil {
-				fmt.Printf("ERRO AO PROCESSAR EVENTO UPDATED: %v", err)
+			// ############ Checkar se mensagem já foi processada ############
+			_, exists := mp.storedMessages.LoadOrStore(msg.UID, true)
+			if exists {
+				fmt.Printf("A mensagem %s já foi processada", msg.UID)
+			} else {
+				err := mp.consumer.Updated(ctx, msg.UserID)
+				if err != nil {
+					fmt.Printf("ERRO AO PROCESSAR EVENTO UPDATED: %v", err)
+				}
 			}
 		case <-ctx.Done():
 			fmt.Println("Processor UPDATED finalizando...")
@@ -154,9 +159,15 @@ func (mp *MessageProcessor) processDeletedEvents(ctx context.Context) {
 	for {
 		select {
 		case msg := <-mp.deletedCh:
-			err := mp.consumer.Deleted(ctx, msg.UserID)
-			if err != nil {
-				fmt.Printf("ERRO AO PROCESSAR EVENTO DELETE: %v", err)
+			// ############ Checkar se mensagem já foi processada ############
+			_, exists := mp.storedMessages.LoadOrStore(msg.UID, true)
+			if exists {
+				fmt.Printf("A mensagem %s já foi processada", msg.UID)
+			} else {
+				err := mp.consumer.Deleted(ctx, msg.UserID)
+				if err != nil {
+					fmt.Printf("ERRO AO PROCESSAR EVENTO DELETED: %v", err)
+				}
 			}
 		case <-ctx.Done():
 			fmt.Println("Processor DELETED finalizando...")
