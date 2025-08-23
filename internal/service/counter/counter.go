@@ -81,7 +81,7 @@ func (ec *Counter) SaveAndWriteFile() {
 		defer file.Close()
 		
 		json := json.NewEncoder(file)
-		json.SetIndent("", "  ")	// Adiciona indentação JSON
+		json.SetIndent("", "\t")	// Adiciona indentação JSON
 
 		err = json.Encode(userCounts) // Escreve os dados
 		if err != nil {
