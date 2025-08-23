@@ -55,12 +55,18 @@ func (mp *MessageProcessor) ProcessMessage(msg amqp091.Delivery) error {
 	userID := parts[0]
 	eventType := parts[2]
 
+	if eventType != string(eventcounter.EventCreated) &&
+	   eventType != string(eventcounter.EventUpdated) &&
+	   eventType != string(eventcounter.EventDeleted) {
+		return fmt.Errorf("tipo de evento inválido na routing key: %s", msg.RoutingKey)
+	}
+
 	var body struct {
 		Id string `json:"id"`
 	}
 	err := json.Unmarshal(msg.Body, &body)
 	if err != nil {
-		return fmt.Errorf("erro ao deserializar o corpo da mensagem: %w", err)
+		return fmt.Errorf("erro ao deserializar o corpo da mensagem: %s", msg.Body)
 	}
 
 	// ############ Checkar se mensagem já foi processada ############

@@ -2,17 +2,22 @@ package consumer
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/reb-felipe/eventcounter/internal/service/counter"
 )
 
 func TestNew(t *testing.T) {
-	// Testa instanciamento
+	// Testa instanciação
 	counter := counter.New()
 	consumer := New(counter)
 	if consumer == nil {
 		t.Fatal("Consumer deveria ser instanciado!")
+	}
+
+	if reflect.TypeOf(consumer) != reflect.TypeOf(&EventConsumer{}) {
+		t.Fatal("Consumer deveria ser do tipo *EventConsumer!")
 	}
 }
 

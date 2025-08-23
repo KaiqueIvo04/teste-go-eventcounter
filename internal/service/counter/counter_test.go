@@ -7,7 +7,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	// Testar instanciamento
+	// Testar instanciação
 	counter := New()
 
 	if counter == nil {
