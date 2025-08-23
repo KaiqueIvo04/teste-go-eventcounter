@@ -23,6 +23,18 @@ func New() *Counter {
 	}
 }
 
+func (ec *Counter) GetCreatedCount(userId string) int {
+	return ec.created[userId]
+}
+
+func (ec *Counter) GetUpdatedCount(userId string) int {
+	return ec.updated[userId]
+}
+
+func (ec *Counter) GetDeletedCount(userId string) int {
+	return ec.deleted[userId]
+}
+
 func (ec *Counter) IncrementCreated(userId string) {
 	ec.mu.Lock()
 	defer ec.mu.Unlock()

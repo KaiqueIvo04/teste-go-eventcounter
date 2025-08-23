@@ -7,6 +7,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	// Testar instanciamento
 	counter := New()
 
 	if counter == nil {
@@ -26,11 +27,13 @@ func TestIncrementCreated(t *testing.T) {
 	counter := New()
 	userId := "user1"
 
+	// Testa incremento simples de Created
 	counter.IncrementCreated(userId)
 	if counter.created[userId] != 1 {
 		t.Fatal("Created não está sendo incrementado corretamente")
 	}
 
+	// Testa múltiplos incrementos de Created
 	counter.created[userId] = 0
 	for i := 0; i < 5; i++ {
 		counter.IncrementCreated(userId)
@@ -44,11 +47,13 @@ func TestIncrementUpdated(t *testing.T) {
 	counter := New()
 	userId := "user1"
 
+	// Testa incremento simples de Updated
 	counter.IncrementUpdated(userId)
 	if counter.updated[userId] != 1 {
 		t.Fatal("Updated não está sendo incrementado corretamente")
 	}
 
+	// Testa múltiplos incrementos de Updated
 	counter.updated[userId] = 0
 	for i := 0; i < 5; i++ {
 		counter.IncrementUpdated(userId)
@@ -62,11 +67,13 @@ func TestIncrementeDeleted(t *testing.T) {
 	counter := New()
 	userId := "user1"
 
+	// Testa incremento simples de Deleted
 	counter.IncrementDeleted(userId)
 	if counter.deleted[userId] != 1 {
 		t.Fatal("Deleted não está sendo incrementado corretamente")
 	}
 
+	// Testa múltiplos incrementos de Deleted
 	counter.deleted[userId] = 0
 	for i := 0; i < 5; i++ {
 		counter.IncrementDeleted(userId)
@@ -85,14 +92,15 @@ func TestSaveAndWriteFile(t *testing.T) {
 	fileUpdated := "json/updated_events.json"
 	fileDeleted := "json/deleted_events.json"
 
+	// Inicializa alguns dados para teste
 	counter.IncrementCreated(userId1)
 	counter.IncrementCreated(userId3)
 	counter.IncrementDeleted(userId2)
 	counter.IncrementUpdated(userId2)
 	counter.IncrementDeleted(userId2)
 
+	// Testa se os arquivos foram criados
 	counter.SaveAndWriteFile()
-
 	_, err := os.Stat(fileCreated)
 	if err != nil {
 		t.Fatalf("Erro ao criar arquivo %s", fileCreated)
